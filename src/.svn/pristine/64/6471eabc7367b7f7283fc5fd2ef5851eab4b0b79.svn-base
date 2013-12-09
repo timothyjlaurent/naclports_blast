@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+# Copyright (c) 2011 The Native Client Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import hashlib
+import os
+import string
+import sys
+
+# usage:
+#   python sha1sum.py filename
+#
+# will hash the filename in binary mode, generating output
+# in the same format as the "sha1sum" utility:
+#
+#  da39a3ee5e6b4b0d3255bfef95601890afd80709 *filename
+#
+# Use this output as input to sha1check.py
+#
+
+for filename in sys.argv[1:]:
+  try:
+    # open the file in binary mode & generate sha1 hash
+    f = open(filename, "rb")
+    h = hashlib.sha1()
+    h.update(f.read())
+    filehash = h.hexdigest()
+    f.close()
+    print filehash.lower() + " *" + os.path.basename(filename)
+  except IOError:
+    sys.stderr.write("sha1sum.py unable to open file %s\n" % filename)
+    sys.exit(-1)
+
+# all files hashed with success
+sys.exit(0)

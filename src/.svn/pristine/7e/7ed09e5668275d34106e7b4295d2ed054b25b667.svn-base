@@ -1,0 +1,39 @@
+#!/bin/bash
+# Copyright (c) 2011 The Native Client Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source pkg_info
+source ../../build_tools/common.sh
+
+BUILD_ARGS="\
+  --build-dir=${NACL_BUILD_SUBDIR} \
+  --stagedir=${NACL_BUILD_SUBDIR} \
+  link=static"
+
+# TODO(eugenis): build dynamic libraries, too
+if [ $NACL_GLIBC = "1" ] ; then
+  BUILD_ARGS+=" --without-python --without-signals --without-mpi"
+  BUILD_ARGS+=" --without-context --without-coroutine"
+else
+  BUILD_ARGS+=" --with-date_time --with-program_options"
+fi
+
+ConfigureStep() {
+  ChangeDir ${NACL_PACKAGES_REPOSITORY}/${PACKAGE_NAME}
+  echo "using gcc : 4.4.3 : ${NACLCXX} ;" > tools/build/v2/user-config.jam
+  LogExecute ./bootstrap.sh --prefix="${NACLPORTS_PREFIX}"
+}
+
+BuildStep() {
+  Banner "Building ${PACKAGE_NAME}"
+  LogExecute ./b2 stage ${BUILD_ARGS}
+}
+
+InstallStep() {
+  Banner "Installing ${PACKAGE_NAME}"
+  LogExecute ./b2 install ${BUILD_ARGS}
+}
+
+PackageInstall
+exit 0

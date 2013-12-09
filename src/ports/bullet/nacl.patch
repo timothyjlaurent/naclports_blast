@@ -1,0 +1,263 @@
+diff --git a/Demos/HelloWorld/Makefile.am b/Demos/HelloWorld/Makefile.am
+new file mode 100644
+index 0000000..64f6cf0
+--- /dev/null
++++ b/Demos/HelloWorld/Makefile.am
+@@ -0,0 +1,5 @@
++noinst_PROGRAMS=AppHelloWorld
++
++AppHelloWorld_SOURCES=HelloWorld.cpp
++AppHelloWorld_CXXFLAGS=-I@top_srcdir@/src $(CXXFLAGS)
++AppHelloWorld_LDADD=-L../../src -lBulletDynamics -lBulletCollision -lLinearMath
+diff --git a/Demos/Makefile.am b/Demos/Makefile.am
+index 7f2bb95..4568758 100644
+--- a/Demos/Makefile.am
++++ b/Demos/Makefile.am
+@@ -1,5 +1,7 @@
++SUBDIRS=HelloWorld
++if CONDITIONAL_BUILD_DEMOS
++SUBDIRS+=OpenGL BasicDemo TerrainDemo VehicleDemo CcdPhysicsDemo SoftDemo AllBulletDemos
++endif
+ if CONDITIONAL_BUILD_MULTITHREADED
+-SUBDIRS=OpenGL BasicDemo TerrainDemo VehicleDemo CcdPhysicsDemo MultiThreadedDemo SoftDemo AllBulletDemos
+-else
+-SUBDIRS=OpenGL BasicDemo TerrainDemo VehicleDemo CcdPhysicsDemo SoftDemo AllBulletDemos
++SUBDIRS+=MultiThreadedDemo
+ endif
+diff --git a/Extras/Serialize/BulletFileLoader/bChunk.cpp b/Extras/Serialize/BulletFileLoader/bChunk.cpp
+index ac9125a..0eb0946 100644
+--- a/Extras/Serialize/BulletFileLoader/bChunk.cpp
++++ b/Extras/Serialize/BulletFileLoader/bChunk.cpp
+@@ -17,7 +17,7 @@ subject to the following restrictions:
+ #include "bDefines.h"
+ #include "bFile.h"
+ 
+-#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__)
++#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__) && !(defined(__native_client__) && !defined(__GLIBC__))
+ #include <memory.h>
+ #endif
+ #include <string.h>
+diff --git a/Extras/Serialize/BulletFileLoader/btBulletFile.cpp b/Extras/Serialize/BulletFileLoader/btBulletFile.cpp
+index 0cc668c..e2adc97 100644
+--- a/Extras/Serialize/BulletFileLoader/btBulletFile.cpp
++++ b/Extras/Serialize/BulletFileLoader/btBulletFile.cpp
+@@ -17,7 +17,7 @@ subject to the following restrictions:
+ #include "bDefines.h"
+ #include "bDNA.h"
+ 
+-#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__)
++#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__) && !(defined(__native_client__) && !defined(__GLIBC__))
+ #include <memory.h>
+ #endif
+ #include <string.h>
+@@ -403,4 +403,4 @@ void	btBulletFile::addStruct(const	char* structType,void* data, int len, void* o
+ 
+ 	mLibPointers.insert(dataChunk.oldPtr, (bStructHandle*)data);
+ 	m_chunks.push_back(dataChunk);
+-}
+\ No newline at end of file
++}
+diff --git a/Makefile.am b/Makefile.am
+index fe2625f..9c90c3d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,7 +1,6 @@
++SUBDIRS=src Demos UnitTests
+ if CONDITIONAL_BUILD_DEMOS
+-SUBDIRS=src Extras Demos
+-else
+-SUBDIRS=src 
++SUBDIRS+=Extras
+ endif
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = bullet.pc
+diff --git a/UnitTests/BulletUnitTests/CMakeLists.txt b/UnitTests/BulletUnitTests/CMakeLists.txt
+index 8f38f05..25fb220 100644
+--- a/UnitTests/BulletUnitTests/CMakeLists.txt
++++ b/UnitTests/BulletUnitTests/CMakeLists.txt
+@@ -9,7 +9,7 @@ INCLUDE_DIRECTORIES(
+ 
+ LINK_LIBRARIES(
+ 	cppunit 
+-	BulletMultiThreaded 
++#	BulletMultiThreaded 
+ 	BulletSoftBody
+ 	BulletDynamics  
+ 	BulletCollision 
+diff --git a/UnitTests/BulletUnitTests/Main.cpp b/UnitTests/BulletUnitTests/Main.cpp
+index 1bc8999..11e9cb6 100644
+--- a/UnitTests/BulletUnitTests/Main.cpp
++++ b/UnitTests/BulletUnitTests/Main.cpp
+@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
+   CPPUNIT_NS::CompilerOutputter outputter( &result, CPPUNIT_NS::stdCOut() );
+   outputter.write(); 
+ 
+-  getchar();
++  // getchar();
+ 
+   return result.wasSuccessful() ? 0 : 1;
+ }
+diff --git a/UnitTests/BulletUnitTests/Makefile.am b/UnitTests/BulletUnitTests/Makefile.am
+new file mode 100644
+index 0000000..d398160
+--- /dev/null
++++ b/UnitTests/BulletUnitTests/Makefile.am
+@@ -0,0 +1,11 @@
++noinst_PROGRAMS=AppBulletUnitTests
++
++AppBulletUnitTests_SOURCES= Main.cpp TestBulletOnly.h TestLinearMath.h \
++	TestCholeskyDecomposition.cpp TestCholeskyDecomposition.h \
++	TestPolarDecomposition.cpp TestPolarDecomposition.h \
++	btCholeskyDecomposition.cpp btCholeskyDecomposition.h
++AppBulletUnitTests_CXXFLAGS=-I@top_srcdir@/src \
++	-I@top_srcdir@/UnitTests/cppunit/include $(CXXFLAGS)
++AppBulletUnitTests_LDADD=-L@top_builddir@/src \
++	-L@top_builddir@/UnitTests/cppunit -lcppunit -lBulletSoftBody \
++	-lBulletDynamics -lBulletCollision -lLinearMath
+diff --git a/UnitTests/Makefile.am b/UnitTests/Makefile.am
+new file mode 100644
+index 0000000..d7decd6
+--- /dev/null
++++ b/UnitTests/Makefile.am
+@@ -0,0 +1 @@
++SUBDIRS=cppunit BulletUnitTests
+diff --git a/UnitTests/cppunit/CMakeLists.txt b/UnitTests/cppunit/CMakeLists.txt
+index 1468214..4b39b29 100644
+--- a/UnitTests/cppunit/CMakeLists.txt
++++ b/UnitTests/cppunit/CMakeLists.txt
+@@ -48,15 +48,15 @@ ADD_LIBRARY(cppunit
+ 	src/cppunit/XmlOutputterHook.cpp
+ 	
+ #plugin	
+-	src/cppunit/BeOsDynamicLibraryManager.cpp
+-	src/cppunit/DynamicLibraryManager.cpp
+-	src/cppunit/DynamicLibraryManagerException.cpp
+-	src/cppunit/PlugInManager.cpp
+-	src/cppunit/PlugInParameters.cpp
+-	src/cppunit/ShlDynamicLibraryManager.cpp
+-	src/cppunit/TestPlugInDefaultImpl.cpp
+-	src/cppunit/UnixDynamicLibraryManager.cpp
+-	src/cppunit/Win32DynamicLibraryManager.cpp
++#	src/cppunit/BeOsDynamicLibraryManager.cpp
++#	src/cppunit/DynamicLibraryManager.cpp
++#	src/cppunit/DynamicLibraryManagerException.cpp
++#	src/cppunit/PlugInManager.cpp
++#	src/cppunit/PlugInParameters.cpp
++#	src/cppunit/ShlDynamicLibraryManager.cpp
++#	src/cppunit/TestPlugInDefaultImpl.cpp
++#	src/cppunit/UnixDynamicLibraryManager.cpp
++#	src/cppunit/Win32DynamicLibraryManager.cpp
+ 	
+ #protector
+ 	src/cppunit/DefaultProtector.cpp
+@@ -71,4 +71,4 @@ ADD_LIBRARY(cppunit
+ 	src/cppunit/XmlDocument.cpp
+ 	src/cppunit/XmlElement.cpp
+ 	
+-)
+\ No newline at end of file
++)
+diff --git a/UnitTests/cppunit/Makefile.am b/UnitTests/cppunit/Makefile.am
+new file mode 100644
+index 0000000..70cadce
+--- /dev/null
++++ b/UnitTests/cppunit/Makefile.am
+@@ -0,0 +1,45 @@
++noinst_LIBRARIES	= libcppunit.a
++
++libcppunit_a_CXXFLAGS = ${CXXFLAGS} -I@top_srcdir@/UnitTests/cppunit/include
++
++libcppunit_a_SOURCES =\
++	src/cppunit/AdditionalMessage.cpp \
++	src/cppunit/Asserter.cpp \
++	src/cppunit/Exception.cpp \
++	src/cppunit/Message.cpp \
++	src/cppunit/SourceLine.cpp \
++	src/cppunit/SynchronizedObject.cpp \
++	src/cppunit/Test.cpp \
++	src/cppunit/TestAssert.cpp \
++	src/cppunit/TestCase.cpp \
++	src/cppunit/TestComposite.cpp \
++	src/cppunit/TestFailure.cpp \
++	src/cppunit/TestLeaf.cpp \
++	src/cppunit/TestPath.cpp \
++	src/cppunit/TestResult.cpp \
++	src/cppunit/TestRunner.cpp \
++	src/cppunit/TestSuite.cpp \
++	src/cppunit/RepeatedTest.cpp \
++	src/cppunit/TestCaseDecorator.cpp \
++	src/cppunit/TestDecorator.cpp \
++	src/cppunit/TestSetUp.cpp \
++	src/cppunit/TestFactoryRegistry.cpp \
++	src/cppunit/TestNamer.cpp \
++	src/cppunit/TestSuiteBuilderContext.cpp \
++	src/cppunit/TypeInfoHelper.cpp \
++	src/cppunit/BriefTestProgressListener.cpp \
++	src/cppunit/TestResultCollector.cpp \
++	src/cppunit/TestSuccessListener.cpp \
++	src/cppunit/TextTestProgressListener.cpp \
++	src/cppunit/TextTestResult.cpp \
++	src/cppunit/CompilerOutputter.cpp \
++	src/cppunit/TextOutputter.cpp \
++	src/cppunit/XmlOutputter.cpp \
++	src/cppunit/XmlOutputterHook.cpp \
++	src/cppunit/DefaultProtector.cpp \
++	src/cppunit/Protector.cpp \
++	src/cppunit/ProtectorChain.cpp \
++	src/cppunit/TextTestRunner.cpp \
++	src/cppunit/StringTools.cpp \
++	src/cppunit/XmlDocument.cpp \
++	src/cppunit/XmlElement.cpp
+diff --git a/configure.ac b/configure.ac
+index 5598d22..255567a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -58,6 +58,11 @@ case "$host" in
+                 ARCH_SPECIFIC_CFLAGS=""
+                 ARCH_STRING="PowerPC"
+                 ;;
++        le32-unknown-nacl*)
++                AC_DEFINE(ARCH_PNACL, 1, [Architecture is PNaCl])
++                ARCH_SPECIFIC_CFLAGS=""
++                ARCH_STIRNG="PNaCl"
++                ;;
+         *)
+                 AC_MSG_ERROR([Unknown Architecture])
+                 ;;
+@@ -163,7 +168,7 @@ CXXFLAGS="$ARCH_SPECIFIC_CFLAGS $CXXFLAGS $CFLAGS"
+ #----------------------------------------------------------------------------
+ # Emit generated files.
+ #----------------------------------------------------------------------------
+-AC_CONFIG_FILES([bullet.pc Makefile Demos/Makefile Demos/SoftDemo/Makefile Demos/AllBulletDemos/Makefile Demos/MultiThreadedDemo/Makefile  Demos/OpenGL/Makefile Demos/BasicDemo/Makefile Demos/CcdPhysicsDemo/Makefile Demos/VehicleDemo/Makefile Demos/TerrainDemo/Makefile src/Makefile Extras/Makefile])
++AC_CONFIG_FILES([bullet.pc Makefile Demos/Makefile Demos/SoftDemo/Makefile Demos/AllBulletDemos/Makefile Demos/MultiThreadedDemo/Makefile  Demos/OpenGL/Makefile Demos/BasicDemo/Makefile Demos/CcdPhysicsDemo/Makefile Demos/VehicleDemo/Makefile Demos/TerrainDemo/Makefile Demos/HelloWorld/Makefile src/Makefile Extras/Makefile UnitTests/Makefile UnitTests/cppunit/Makefile UnitTests/BulletUnitTests/Makefile])
+ AC_OUTPUT
+ 
+ AC_MSG_NOTICE([
+diff --git a/src/BulletCollision/BroadphaseCollision/btDbvt.h b/src/BulletCollision/BroadphaseCollision/btDbvt.h
+index 1298ed8..262b82c 100644
+--- a/src/BulletCollision/BroadphaseCollision/btDbvt.h
++++ b/src/BulletCollision/BroadphaseCollision/btDbvt.h
+@@ -92,7 +92,8 @@ subject to the following restrictions:
+ #endif
+ 
+ #if DBVT_USE_MEMMOVE
+-#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__)
++#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__) && !(defined(__native_client__) && !defined(__GLIBC__))
++
+ #include <memory.h>
+ #endif
+ #include <string.h>
+diff --git a/src/LinearMath/btSerializer.h b/src/LinearMath/btSerializer.h
+index 7304c85..e3d6995 100644
+--- a/src/LinearMath/btSerializer.h
++++ b/src/LinearMath/btSerializer.h
+@@ -20,7 +20,8 @@ subject to the following restrictions:
+ #include "btStackAlloc.h"
+ #include "btHashMap.h"
+ 
+-#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__)
++#if !defined( __CELLOS_LV2__) && !defined(__MWERKS__) && !(defined(__native_client__) && !defined(__GLIBC__))
++
+ #include <memory.h>
+ #endif
+ #include <string.h>

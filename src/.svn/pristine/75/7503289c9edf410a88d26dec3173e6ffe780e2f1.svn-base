@@ -1,0 +1,53 @@
+diff -Naur faac-1.28/frontend/main.c faac-1.28.nacl/frontend/main.c
+--- faac-1.28/frontend/main.c	2009-01-23 17:10:20.000000000 -0800
++++ faac-1.28.nacl/frontend/main.c	2013-01-26 23:04:33.383592895 -0800
+@@ -43,7 +43,7 @@
+ #endif
+ 
+ /* the BSD derivatives don't define __unix__ */
+-#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__)
++#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__native_client__)
+ #define __unix__
+ #endif
+ 
+@@ -1048,14 +1048,14 @@
+             if ((showcnt <= 0) || !bytesWritten)
+             {
+                 double timeused;
+-#ifdef __unix__
++#if defined(__unix__) && defined(HAVE_GETRUSAGE)
+                 struct rusage usage;
+ #endif
+ #ifdef _WIN32
+                 char percent[MAX_PATH + 20];
+                 timeused = (GetTickCount() - begin) * 1e-3;
+ #else
+-#ifdef __unix__
++#if defined(__unix__) && defined(HAVE_GETRUSAGE)
+                 if (getrusage(RUSAGE_SELF, &usage) == 0) {
+                     timeused = (double)usage.ru_utime.tv_sec +
+                         (double)usage.ru_utime.tv_usec * 1e-6;
+diff -Naur faac-1.28/libfaac/kiss_fft/kiss_fft.h faac-1.28.nacl/libfaac/kiss_fft/kiss_fft.h
+--- faac-1.28/libfaac/kiss_fft/kiss_fft.h	2005-02-04 06:57:12.000000000 -0800
++++ faac-1.28.nacl/libfaac/kiss_fft/kiss_fft.h	2009-10-22 14:57:52.082873000 -0700
+@@ -4,7 +4,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <math.h>
+-#include <memory.h>
++#include <string.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+diff -Naur faac-1.28/libfaac/util.h faac-1.28.nacl/libfaac/util.h
+--- faac-1.28/libfaac/util.h	2003-12-19 20:32:48.000000000 -0800
++++ faac-1.28.nacl/libfaac/util.h	2009-10-22 14:57:20.498638000 -0700
+@@ -27,7 +27,7 @@
+ #endif /* __cplusplus */
+ 
+ #include <stdlib.h>
+-#include <memory.h>
++#include <string.h>
+ 
+ #ifndef max
+ #define max(a, b) (((a) > (b)) ? (a) : (b))

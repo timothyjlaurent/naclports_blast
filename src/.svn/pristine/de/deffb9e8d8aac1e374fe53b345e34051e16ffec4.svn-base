@@ -1,0 +1,2 @@
+PACKAGE_NAME=ruby_ppapi
+DISABLED_ARCH=pnacl

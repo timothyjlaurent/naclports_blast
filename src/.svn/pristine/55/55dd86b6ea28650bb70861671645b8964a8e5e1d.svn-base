@@ -1,0 +1,132 @@
+diff --git a/Makefile b/Makefile
+index 133a1ef..ecd1e27 100644
+--- a/Makefile
++++ b/Makefile
+@@ -9,8 +9,8 @@
+ 
+ include resources/Makefile.in-os
+ 
+-CPROG = civetweb
+ #CXXPROG = civetweb
++CPROG = civetweb
+ 
+ BUILD_DIR = out
+ 
+@@ -92,7 +92,11 @@ LIB_OBJECTS = $(filter-out $(MAIN_OBJECTS), $(BUILD_OBJECTS))
+ 
+ LIBS = -lpthread -lm
+ 
+-ifeq ($(TARGET_OS),LINUX) 
++ifeq ($(TARGET_OS),NACL)
++	LIBS += -lppapi_simple -lnacl_io -lppapi_cpp -lppapi
++endif
++
++ifeq ($(TARGET_OS),LINUX)
+ 	LIBS += -ldl
+ endif
+ 
+diff --git a/src/civetweb.c b/src/civetweb.c
+index 3cc395a..d1ff233 100644
+--- a/src/civetweb.c
++++ b/src/civetweb.c
+@@ -61,6 +61,13 @@
+ #define IGNORE_UNUSED_RESULT(a) (void)((a) && 1)
+ #endif
+ 
++#if defined(__native_client__) && !defined(__GLIBC__)
++// Newlib doesn't currently implemnt flockfile/funlockfile.
++// TODO(sbc): remove this once newlib is fixed.
++#define flockfile(x)
++#define funlockfile(x)
++#endif
++
+ #ifndef _WIN32_WCE /* Some ANSI #includes are not available on Windows CE */
+ #include <sys/types.h>
+ #include <sys/stat.h>
+@@ -222,7 +229,7 @@ struct pollfd {
+ #else    /* UNIX  specific */
+ #include <sys/wait.h>
+ #include <sys/socket.h>
+-#include <sys/poll.h>
++#include <poll.h>
+ #include <netinet/in.h>
+ #include <arpa/inet.h>
+ #include <sys/time.h>
+diff --git a/src/main.c b/src/main.c
+index c8dff6e..97d3264 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -69,9 +69,17 @@ extern char *_getcwd(char *buf, size_t size);
+ #include <unistd.h>
+ #define DIRSEP '/'
+ #define WINCDECL
++#ifdef __native_client__
++// realpath is currently broken under glibc at least:
++// TODO(sbc): remove once this gets fixed:
++// https://code.google.com/p/nativeclient/issues/detail?id=3717
++#define abs_path(rel, abs, abs_size) strncpy((abs), (rel), (abs_size))
++#else
+ #define abs_path(rel, abs, abs_size) realpath((rel), (abs))
++#endif
+ #endif /* _WIN32 */
+ 
++
+ #define MAX_OPTIONS 100
+ #define MAX_CONF_FILE_LINE_SIZE (8 * 1024)
+ 
+@@ -1049,8 +1057,46 @@ int main(int argc, char *argv[])
+     return EXIT_SUCCESS;
+ }
+ #else
++
++#ifdef __native_client__
++#include <assert.h>
++#include <sys/mount.h>
++#include "ppapi_simple/ps_main.h"
++#define main civetweb_main
++#endif
++
+ int main(int argc, char *argv[])
+ {
++#ifdef __native_client__
++  int result = umount("/");
++  assert(result == 0);
++
++  result = mount("", "/", "memfs", 0, NULL);
++  assert(result == 0);
++
++  result = mkdir("/home", 0777);
++  assert(result == 0);
++  result = mkdir("/mnt", 0777);
++  assert(result == 0);
++  result = mkdir("/mnt/html5fs", 0777);
++  assert(result == 0);
++  setenv("HOME", "/home", 1);
++  setenv("USER", "nacl", 1);
++
++  // Mount persistent filesystem
++  result = mount("", "/mnt/html5fs", "html5fs", 0, NULL);
++  assert(result == 0);
++  result = chdir("/mnt/html5fs");
++  assert(result == 0);
++
++  struct stat buf;
++  if (stat("index.html", &buf) != 0) {
++    const char* index_html = "<h1>Civetweb is working!</h1>\n";
++    FILE* f = fopen("index.html", "w+");
++    fwrite(index_html, strlen(index_html), 1, f);
++    fclose(f);
++  }
++#endif
+     init_server_name();
+     start_civetweb(argc, argv);
+     printf("%s started on port(s) %s with web root [%s]\n",
+@@ -1067,4 +1113,8 @@ int main(int argc, char *argv[])
+ 
+     return EXIT_SUCCESS;
+ }
++
++#ifdef __native_client__
++PPAPI_SIMPLE_REGISTER_MAIN(civetweb_main)
++#endif
+ #endif /* _WIN32 */
