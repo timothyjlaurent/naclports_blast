@@ -3,7 +3,7 @@ source pkg_info
 source ../../build_tools/common.sh
 
 
-DefaultConfigureStep() {
+ConfigureStep() {
   local EXTRA_CONFIGURE_OPTS=("${@:-}")
   Banner "Configuring ${PACKAGE_NAME}"
   # export the nacl tools
