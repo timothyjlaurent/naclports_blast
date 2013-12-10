@@ -48,7 +48,7 @@ ConfigureStep() {
     --prefix=${NACLPORTS_PREFIX} \
     --exec-prefix=${NACLPORTS_PREFIX} \
     --libdir=${NACLPORTS_LIBDIR} \
-    --oldincludedir=${NACLPORTS_INCLUDE} \
+    ##    --oldincludedir=${NACLPORTS_INCLUDE} \
     --with-http=no \
     --with-html=no \
     --with-ftp=no \
