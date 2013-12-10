@@ -55,5 +55,25 @@ ConfigureStep() {
     "${EXTRA_CONFIGURE_OPTS[@]}" ${EXTRA_CONFIGURE_ARGS:-}
 }
 
+
+
+BuildStep() {
+  Banner "Build ${PACKAGE_NAME}"
+  echo "Directory: $(pwd)"
+  # Build ${MAKE_TARGETS} or default target if it is not defined
+  cd ../c++/GCC443-Debug/build
+  MAKE_TARGETS="all_r"
+  if [ -n "${MAKEFLAGS:-}" ]; then
+    echo "MAKEFLAGS=${MAKEFLAGS}"
+    export MAKEFLAGS
+  fi
+  export PATH=${NACL_BIN_PATH}:${PATH};
+  LogExecute make -j${OS_JOBS} ${MAKE_TARGETS:-}
+}
+
+
+
+
+
 PackageInstall
 exit 0
