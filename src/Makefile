@@ -248,7 +248,8 @@ endif
 endif
 
 # packages with dependencies
-#$(SENT)/ports/BLAST: ports/boost
+$(SENT)/ports/BLAST: ports/glibc-compat
+
 $(SENT)/ports/libvorbis: ports/libogg
 $(SENT)/ports/libtheora: ports/libogg
 $(SENT)/ports/flac: ports/libogg

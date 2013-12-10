@@ -67,8 +67,9 @@ BuildStep() {
     echo "MAKEFLAGS=${MAKEFLAGS}"
     export MAKEFLAGS
   fi
+  GLIBC_COMPAT_INCLUDE_DIR="../../../../glibc-compat-0.1/include"
   export PATH=${NACL_BIN_PATH}:${PATH};
-  LogExecute make -j${OS_JOBS} ${MAKE_TARGETS:-}
+  LogExecute make -j${OS_JOBS} -I${GLIBC_COMPAT_INCLUDE_DIR}/syslog.h  ${MAKE_TARGETS:-}
 }
 
 
