@@ -82,7 +82,8 @@ ALL_PORTS = \
      ports/bash \
      ports/bochs \
      ports/boost \
-     ports/box2d \
+    ports/BLAST \
+	ports/box2d \
      ports/bullet \
      ports/bzip2 \
      ports/cairo \
@@ -314,9 +315,11 @@ $(SENT)/ports/physfs: ports/zlib
 $(SENT)/ports/mpg123: ports/openal-soft
 $(SENT)/ports/ImageMagick: ports/libpng ports/jpeg8d ports/bzip2 ports/zlib
 $(SENT)/ports/gdb: ports/ncurses ports/expat ports/readline
+$(SENT)/ports/BLAST: ports/boost
 
 # shortcuts libraries (alphabetical)
 agg: ports/agg ;
+BLAST: ports/BLAST ;
 boost: ports/boost ;
 box2d: ports/box2d ;
 bullet: ports/bullet ;

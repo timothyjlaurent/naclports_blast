@@ -1,5 +1,5 @@
 source pkg_info
 source ../../build_tools/common.sh
 
-DefaultPackageInstall
+PackageInstall
 exit 0
