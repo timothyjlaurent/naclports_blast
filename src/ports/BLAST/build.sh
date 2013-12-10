@@ -4,6 +4,10 @@ source ../../build_tools/common.sh
 
 
 ConfigureStep() {
+  #hack
+  pwd
+  cp ../../../build_tools/config.sub ./c++/src/build-system/config.sub   
+    
   local EXTRA_CONFIGURE_OPTS=("${@:-}")
   Banner "Configuring ${PACKAGE_NAME}"
   # export the nacl tools
@@ -48,15 +52,6 @@ ConfigureStep() {
     --prefix=${NACLPORTS_PREFIX} \
     --exec-prefix=${NACLPORTS_PREFIX} \
     --libdir=${NACLPORTS_LIBDIR} \
-    ##    --oldincludedir=${NACLPORTS_INCLUDE} \
-    --with-http=no \
-    --with-html=no \
-    --with-ftp=no \
-    --${NACL_OPTION}-mmx \
-    --${NACL_OPTION}-sse \
-    --${NACL_OPTION}-sse2 \
-    --${NACL_OPTION}-asm \
-    --with-x=no  \
     "${EXTRA_CONFIGURE_OPTS[@]}" ${EXTRA_CONFIGURE_ARGS:-}
 }
 
